@@ -1,4 +1,4 @@
-# DAI Data Engineering Program (DEP)
+# DEP Data Engineering Open Track: A 6-Month Project-Driven Build Journey
 
 > A 6-month, self-paced, project-driven learning journey. Participants build a real, deployable data project using free and open-source tools.
 

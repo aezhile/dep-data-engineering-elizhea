@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEP — Submission Tracker</title>
+  <style>
+    :root {
+      --navy: #0A1628;
+      --gold: #F59E0B;
+      --blue: #0052CC;
+      --green: #16A34A;
+      --amber: #D97706;
+      --gray: #6B7280;
+      --light: #F9FAFB;
+      --border: #E5E7EB;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--light);
+      color: #111;
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--navy);
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    header h1 { font-size: 1.2rem; font-weight: 600; }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-card .number { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .stat-card .label  { font-size: 0.8rem; color: var(--gray); margin-top: 0.25rem; }
+
+    .stat-card.total       .number { color: var(--navy); }
+    .stat-card.pending     .number { color: var(--blue); }
+    .stat-card.improvement .number { color: var(--amber); }
+    .stat-card.passed      .number { color: var(--green); }
+
+    .section {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--navy);
+      margin-bottom: 1rem;
+    }
+
+    .milestone-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.75rem;
+    }
+
+    .milestone-col { text-align: center; }
+
+    .milestone-col .m-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin-bottom: 0.5rem;
+    }
+
+    .milestone-col .m-bar {
+      height: 80px;
+      background: var(--light);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+    }
+
+    .milestone-col .m-passed { font-size: 1.25rem; font-weight: 700; color: var(--green); }
+    .milestone-col .m-total  { font-size: 0.7rem; color: var(--gray); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+
+    th {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--gray);
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #F8FAFC; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .badge.passed           { background: #DCFCE7; color: #16A34A; }
+    .badge.needs-improvement { background: #FEF3C7; color: #D97706; }
+    .badge.pending-review   { background: #DBEAFE; color: #2563EB; }
+    .badge.checking         { background: #F3F4F6; color: #6B7280; }
+
+    .m-badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #EFF6FF;
+      color: #1D4ED8;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .empty {
+      text-align: center;
+      padding: 2rem;
+      color: var(--gray);
+      font-size: 0.875rem;
+    }
+
+    .refresh-btn {
+      background: var(--gold);
+      color: var(--navy);
+      border: none;
+      padding: 0.5rem 1.25rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .refresh-btn:hover { opacity: 0.9; }
+
+    #last-updated { font-size: 0.8rem; color: #94A3B8; }
+
+    .loading { text-align: center; padding: 3rem; color: var(--gray); font-size: 0.875rem; }
+
+    @media (max-width: 700px) {
+      .stats            { grid-template-columns: repeat(2, 1fr); }
+      .milestone-grid   { grid-template-columns: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>DEP — Submission Tracker</h1>
+  <div style="display:flex;align-items:center;gap:1rem;">
+    <span id="last-updated"></span>
+    <button class="refresh-btn" onclick="load()">Refresh</button>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="stats">
+    <div class="stat-card total">      <div class="number" id="s-total">—</div>      <div class="label">Total Submissions</div></div>
+    <div class="stat-card pending">    <div class="number" id="s-pending">—</div>    <div class="label">Pending Review</div></div>
+    <div class="stat-card improvement"><div class="number" id="s-improvement">—</div><div class="label">Needs Improvement</div></div>
+    <div class="stat-card passed">     <div class="number" id="s-passed">—</div>     <div class="label">Passed</div></div>
+  </div>
+
+  <div class="section">
+    <h2>Milestone Progress — Passed Submissions</h2>
+    <div class="milestone-grid" id="milestone-grid"></div>
+  </div>
+
+  <div class="section">
+    <h2>👀 Pending Reviewer Action</h2>
+    <div id="queue-pending"><div class="loading">Loading…</div></div>
+  </div>
+
+  <div class="section">
+    <h2>⚠️ Needs Improvement — Waiting for Builder</h2>
+    <div id="queue-improvement"><div class="loading">Loading…</div></div>
+  </div>
+
+  <div class="section">
+    <h2>All Submissions</h2>
+    <div id="queue-all"><div class="loading">Loading…</div></div>
+  </div>
+
+</div>
+
+<script>
+const OWNER      = 'dataengineeringpilipinas';
+const REPO       = 'dep-data-engineering-open-track';
+const MILESTONES = ['M0','M1','M2','M3','M4','M5','M6'];
+
+function extract(body, heading) {
+  const m = (body || '').match(new RegExp(`###\\s+${heading}\\s*\\n+([^\\n#]+)`, 'i'));
+  return m ? m[1].trim() : '—';
+}
+
+function getStatus(labels) {
+  const names = labels.map(l => l.name);
+  if (names.includes('passed'))             return 'passed';
+  if (names.includes('needs-improvement'))  return 'needs-improvement';
+  if (names.includes('auto-check-pending')) return 'checking';
+  return 'pending-review';
+}
+
+function getMilestone(labels) {
+  const names = labels.map(l => l.name);
+  return names.find(n => /^M\d$/.test(n)) || '?';
+}
+
+function statusBadge(s) {
+  const map = {
+    'passed':            ['passed',            '✅ Passed'],
+    'needs-improvement': ['needs-improvement', '⚠️ Needs Improvement'],
+    'pending-review':    ['pending-review',    '👀 Pending Review'],
+    'checking':          ['checking',          '⏳ Checking'],
+  };
+  const [cls, label] = map[s] || ['checking', s];
+  return `<span class="badge ${cls}">${label}</span>`;
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function buildTable(issues) {
+  if (!issues.length) return `<div class="empty">No submissions here.</div>`;
+  return `<table>
+    <thead><tr>
+      <th>Builder</th><th>Cohort</th><th>Milestone</th><th>Submitted</th><th>Status</th><th>Issue</th>
+    </tr></thead>
+    <tbody>${issues.map(i => {
+      const builder   = extract(i.body, 'Builder Name');
+      const cohort    = extract(i.body, 'Cohort');
+      const milestone = getMilestone(i.labels);
+      const status    = getStatus(i.labels);
+      return `<tr>
+        <td>${builder}</td>
+        <td>${cohort}</td>
+        <td><span class="m-badge">${milestone}</span></td>
+        <td>${formatDate(i.created_at)}</td>
+        <td>${statusBadge(status)}</td>
+        <td><a href="${i.html_url}" target="_blank">#${i.number}</a></td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table>`;
+}
+
+async function fetchAll() {
+  let issues = [], page = 1;
+  while (true) {
+    const res   = await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/issues?labels=milestone-submission&state=all&per_page=100&page=${page}`);
+    const batch = await res.json();
+    if (!Array.isArray(batch) || !batch.length) break;
+    issues = issues.concat(batch.filter(i => !i.pull_request));
+    if (batch.length < 100) break;
+    page++;
+  }
+  return issues;
+}
+
+async function load() {
+  document.getElementById('last-updated').textContent = 'Loading…';
+
+  const issues      = await fetchAll();
+  const pending     = issues.filter(i => i.state === 'open' && getStatus(i.labels) === 'pending-review');
+  const improvement = issues.filter(i => i.state === 'open' && getStatus(i.labels) === 'needs-improvement');
+  const passed      = issues.filter(i => getStatus(i.labels) === 'passed');
+
+  document.getElementById('s-total').textContent       = issues.length;
+  document.getElementById('s-pending').textContent     = pending.length;
+  document.getElementById('s-improvement').textContent = improvement.length;
+  document.getElementById('s-passed').textContent      = passed.length;
+
+  document.getElementById('milestone-grid').innerHTML = MILESTONES.map(m => {
+    const mAll    = issues.filter(i => getMilestone(i.labels) === m);
+    const mPassed = mAll.filter(i => getStatus(i.labels) === 'passed').length;
+    return `<div class="milestone-col">
+      <div class="m-label">${m}</div>
+      <div class="m-bar">
+        <div class="m-passed">${mPassed}</div>
+        <div class="m-total">${mAll.length} submitted</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('queue-pending').innerHTML     = buildTable(pending);
+  document.getElementById('queue-improvement').innerHTML = buildTable(improvement);
+  document.getElementById('queue-all').innerHTML         = buildTable(issues);
+
+  document.getElementById('last-updated').textContent =
+    'Updated ' + new Date().toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' });
+}
+
+load();
+</script>
+</body>
+</html>

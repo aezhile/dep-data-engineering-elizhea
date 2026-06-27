@@ -12,7 +12,7 @@ The main metric I want to track is **% of NCR minimum wage required to afford a 
 ## Likely Data Source
 I will explore:
 - **PSA OpenSTAT Retail Prices** (https://openstat.psa.gov.ph/Database/Prices/Retail-Prices) — for grocery item prices, sourced from PSA's Retail Price Survey.
-- **FNRI Philippine Dietary Reference Intakes (PDRI)** (https://www.fnri.dost.gov.ph/index.php/tools-and-standard/philippine-dietary-reference-intakes-pdri) — for the official nutrient requirement targets a basket must meet.
+- A source for official nutrient requirement targets, possibly **FNRI's Philippine Dietary Reference Intakes (PDRI)** or a similar published standard. I'll find and confirm a stable link to this in Milestone 1.
 
 These two sources will need to be combined: prices give the cost side, PDRI gives the nutritional constraint side. I expect to also need a Philippine Food Composition Table to map grocery items to their nutrient content, which I'll source in a later milestone.
 
